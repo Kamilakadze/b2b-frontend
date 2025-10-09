@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -10,11 +11,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { useAuthStore } from "@/lib/store"
-import { Mail, Shield, Calendar, Activity, MapPin, BarChart3, Save } from "lucide-react"
+import { Mail, Shield, Calendar, Activity, MapPin, BarChart3, Save, LogOut } from "lucide-react"
 
 export default function ProfilePage() {
-    const { user } = useAuthStore()
+    const router = useRouter()
+    const { user, logout } = useAuthStore()
     const [activeTab, setActiveTab] = useState("profile")
+
+    const handleLogout = () => {
+        logout()
+        router.push("/login")
+    }
 
     const recentActivity = [
         { id: "1", action: "Viewed location analysis", location: "Dostyk Avenue", time: "2 hours ago" },
@@ -57,15 +64,11 @@ export default function ProfilePage() {
                                         <Mail className="h-4 w-4" />
                                         {user?.email}
                                     </p>
-                                    <div className="mt-4 flex gap-6 text-sm">
-                                        <div>
-                                            <p className="text-muted-foreground">Member since</p>
-                                            <p className="font-semibold">January 2024</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-muted-foreground">Last login</p>
-                                            <p className="font-semibold">Today at 10:30 AM</p>
-                                        </div>
+                                    <div className="mt-4">
+                                        <Button variant="outline" onClick={handleLogout} className="gap-2 bg-transparent">
+                                            <LogOut className="h-4 w-4" />
+                                            Log out
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
