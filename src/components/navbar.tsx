@@ -15,7 +15,7 @@ export function Navbar() {
     const navigation = [
         { name: "Map", href: "/map", icon: MapPin },
         { name: "Analysis", href: "/analysis", icon: BarChart3 },
-        { name: "Admin", href: "/admin", icon: Settings },
+        ...(user?.role === "admin" ? [{ name: "Admin" as const, href: "/admin" as const, icon: Settings }] : []),
         { name: "Profile", href: "/profile", icon: User },
     ]
 

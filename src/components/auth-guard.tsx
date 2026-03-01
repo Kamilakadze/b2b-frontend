@@ -15,6 +15,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     const isProtected = pathname && PROTECTED_PATHS.some((p) => pathname.startsWith(p))
     const isPublic = pathname && PUBLIC_PATHS.some((p) => pathname === p)
+    const isAdminPath = pathname?.startsWith("/admin")
+    const isAdmin = useAuthStore((s) => s.user?.role === "admin")
 
     useEffect(() => {
         let cancelled = false
@@ -39,10 +41,14 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
             router.replace("/login")
             return
         }
+        if (isAdminPath && isAuthenticated && !isAdmin) {
+            router.replace("/map")
+            return
+        }
         if (isPublic && isAuthenticated) {
             router.replace("/map")
         }
-    }, [authChecked, isProtected, isPublic, isAuthenticated, router])
+    }, [authChecked, isProtected, isPublic, isAuthenticated, isAdminPath, isAdmin, router])
 
     if (!authChecked && isProtected) {
         return (
