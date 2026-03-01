@@ -5,6 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { MapPin } from "lucide-react"
+import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,16 +18,21 @@ export default function LoginPage() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState("")
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
+        setError("")
 
         try {
             await login(email, password)
             router.push("/map")
-        } catch (error) {
-            console.error("Login failed:", error)
+        } catch (err: unknown) {
+            const message = axios.isAxiosError(err) && err.response?.data?.detail
+                ? (typeof err.response.data.detail === "string" ? err.response.data.detail : "Invalid email or password")
+                : "Login failed. Try again."
+            setError(message)
         } finally {
             setIsLoading(false)
         }
@@ -70,6 +76,7 @@ export default function LoginPage() {
                                 className="h-11"
                             />
                         </div>
+                        {error && <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
                         <Button
                             type="submit"
                             className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"

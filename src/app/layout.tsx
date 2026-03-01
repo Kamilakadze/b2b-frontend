@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Suspense } from "react"
+import { AuthGuard } from "@/components/auth-guard"
 import "./globals.css"
 
 const inter = Inter({
@@ -24,7 +25,9 @@ export default function RootLayout({
     return (
         <html lang="en">
         <body className={`font-sans ${inter.variable} antialiased`}>
-        <Suspense fallback={null}>{children}</Suspense>
+        <Suspense fallback={null}>
+            <AuthGuard>{children}</AuthGuard>
+        </Suspense>
         </body>
         </html>
     )

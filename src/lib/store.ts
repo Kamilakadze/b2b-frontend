@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { api } from "./api"
 
 interface User {
     id: string
@@ -12,8 +13,10 @@ interface AuthState {
     token: string | null
     isAuthenticated: boolean
     login: (email: string, password: string) => Promise<void>
+    register: (email: string, password: string, fullName?: string) => Promise<void>
     logout: () => void
     setUser: (user: User, token: string) => void
+    fetchMe: () => Promise<boolean>
 }
 
 interface MapState {
@@ -29,23 +32,49 @@ interface MapState {
     setTimeOfDay: (time: string) => void
 }
 
+function mapBackendUser(backendUser: { id: number; email: string; full_name: string | null; is_admin: boolean }): User {
+    return {
+        id: String(backendUser.id),
+        email: backendUser.email,
+        name: backendUser.full_name || backendUser.email,
+        role: backendUser.is_admin ? "admin" : "user",
+    }
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
     user: null,
     token: null,
     isAuthenticated: false,
     login: async (email: string, password: string) => {
-        // TODO: Replace with actual API call
-        // Simulated login for now
-        const mockUser: User = {
-            id: "1",
-            email,
-            name: "Demo User",
-            role: "user",
+        const { data } = await api.post<{ access_token: string; user: { id: number; email: string; full_name: string | null; is_admin: boolean } }>("/auth/login", { email, password })
+        const user = mapBackendUser(data.user)
+        const token = data.access_token
+        set({ user, token, isAuthenticated: true })
+        localStorage.setItem("token", token)
+    },
+    fetchMe: async () => {
+        const token = localStorage.getItem("token")
+        if (!token) return false
+        try {
+            const { data } = await api.get<{ id: number; email: string; full_name: string | null; is_admin: boolean }>("/auth/me")
+            set({ user: mapBackendUser(data), token, isAuthenticated: true })
+            return true
+        } catch {
+            localStorage.removeItem("token")
+            set({ user: null, token: null, isAuthenticated: false })
+            return false
         }
-        const mockToken = "mock-jwt-token"
-
-        set({ user: mockUser, token: mockToken, isAuthenticated: true })
-        localStorage.setItem("token", mockToken)
+    },
+    register: async (email: string, password: string, fullName?: string) => {
+        await api.post("/auth/register", { email, password, full_name: fullName || null })
+        const { data } = await api.post<{ access_token: string; user: { id: number; email: string; full_name: string | null; is_admin: boolean } }>("/auth/login", {
+            email,
+            password,
+        })
+        const user = mapBackendUser(data.user)
+        const token = data.access_token
+        set({ user, token, isAuthenticated: true })
+        localStorage.setItem("token", token)
     },
     logout: () => {
         set({ user: null, token: null, isAuthenticated: false })

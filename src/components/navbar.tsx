@@ -1,14 +1,16 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { MapPin, BarChart3, Settings, User } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { MapPin, BarChart3, Settings, User, LogOut } from "lucide-react"
 import { useAuthStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 export function Navbar() {
     const pathname = usePathname()
-    const { user } = useAuthStore()
+    const router = useRouter()
+    const { user, logout } = useAuthStore()
 
     const navigation = [
         { name: "Map", href: "/map", icon: MapPin },
@@ -53,7 +55,23 @@ export function Navbar() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        {user && <div className="hidden md:block text-sm text-muted-foreground">{user.email}</div>}
+                        {user && (
+                            <>
+                                <span className="hidden md:block text-sm text-muted-foreground">{user.email}</span>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        logout()
+                                        router.push("/login")
+                                    }}
+                                    className="flex items-center gap-2"
+                                >
+                                    <LogOut className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Выйти</span>
+                                </Button>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

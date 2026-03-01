@@ -4,6 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { MapPin } from "lucide-react"
+import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,9 +13,10 @@ import { useAuthStore } from "@/lib/store"
 
 export default function RegisterPage() {
     const router = useRouter()
-    const login = useAuthStore((state) => state.login)
+    const register = useAuthStore((state) => state.register)
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const [fullName, setFullName] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState("")
@@ -36,15 +38,13 @@ export default function RegisterPage() {
         setIsLoading(true)
 
         try {
-            // Simulate registration API call
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-
-            // Auto-login after successful registration
-            await login(email, password)
+            await register(email, password, fullName || undefined)
             router.push("/map")
-        } catch (error) {
-            console.error("Registration failed:", error)
-            setError("Registration failed. Please try again.")
+        } catch (err: unknown) {
+            const message = axios.isAxiosError(err) && err.response?.data?.detail
+                ? (typeof err.response.data.detail === "string" ? err.response.data.detail : "Registration failed.")
+                : "Registration failed. Please try again."
+            setError(message)
         } finally {
             setIsLoading(false)
         }
@@ -66,6 +66,17 @@ export default function RegisterPage() {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="fullName">Full name (optional)</Label>
+                            <Input
+                                id="fullName"
+                                type="text"
+                                placeholder="Your name"
+                                value={fullName}
+                                onChange={(e) => setFullName(e.target.value)}
+                                className="h-11"
+                            />
+                        </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">Email address</Label>
                             <Input
